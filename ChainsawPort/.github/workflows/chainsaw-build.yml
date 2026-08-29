@@ -1,0 +1,45 @@
+name: Build Chainsaw Quest Port
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Unity version
+        run: |
+          grep -q '2021.3.16f1' ProjectSettings/ProjectVersion.txt
+
+      - name: Validate migration inputs
+        run: |
+          test -f LegacyInput/pallet.json
+          echo 'Legacy pallet metadata present.'
+          if [ ! -f Assets/ChainsawPort/Source/Chainsaw.prefab ]; then
+            echo '::warning::Editable Chainsaw.prefab is not present.'
+            echo 'The uploaded legacy release contains packed AssetBundles only.'
+          fi
+
+      - name: Create status artifact
+        run: |
+          mkdir -p Build
+          cp LegacyInput/pallet.json Build/pallet-migration-template.json
+          printf '%s\n' \
+            'Chainsaw BONELAB Quest port workspace' \
+            'Unity: 2021.3.16f1' \
+            'Target: Quest' \
+            'Status: current-SDK asset rebuild required' > Build/PORT_STATUS.txt
+
+      - name: Upload workspace status
+        uses: actions/upload-artifact@v4
+        with:
+          name: chainsaw-port-status
+          path: Build/
+
+# IMPORTANT:
+# Do not rename the old AssetBundles and call them rebuilt.
+# The final Quest pallet must be packed by the current MarrowSDK after the
+# editable Chainsaw prefab/assets are available in this Unity project.
