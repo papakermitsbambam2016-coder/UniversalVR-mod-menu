@@ -1,0 +1,27 @@
+name: Build Chainsaw BONELAB Code Mod
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Chainsaw BONELAB Code Mod/**'
+      - '.github/workflows/build-chainsaw-code-mod.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Check target references
+        run: |
+          test -f 'Chainsaw BONELAB Code Mod/ChainsawCodeMod/References/MelonLoader.dll' || echo 'WARNING: Quest reference DLLs are not committed.'
+      - name: Build
+        run: dotnet build 'Chainsaw BONELAB Code Mod/ChainsawCodeMod/ChainsawCodeMod.csproj' -c Release
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chainsaw-BONELAB-Code-Mod
+          path: 'Chainsaw BONELAB Code Mod/ChainsawCodeMod/bin/Release/**/ChainsawBONELABCodeMod.dll'
