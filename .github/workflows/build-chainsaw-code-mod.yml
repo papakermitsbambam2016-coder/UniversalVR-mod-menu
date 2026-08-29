@@ -17,11 +17,12 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Check target references
         run: |
-          test -f 'Chainsaw BONELAB Code Mod/ChainsawCodeMod/References/MelonLoader.dll' || echo 'WARNING: Quest reference DLLs are not committed.'
+          test -f 'Chainsaw BONELAB Code Mod/References/MelonLoader.dll' || echo 'WARNING: Quest reference DLLs are not committed.'
+          test -f 'Chainsaw BONELAB Code Mod/References/BoneLib.dll' || echo 'WARNING: BoneLib reference DLL is not committed.'
       - name: Build
-        run: dotnet build 'Chainsaw BONELAB Code Mod/ChainsawCodeMod/ChainsawCodeMod.csproj' -c Release
+        run: dotnet build 'Chainsaw BONELAB Code Mod/ChainsawCodeMod.csproj' -c Release
       - name: Upload DLL
         uses: actions/upload-artifact@v4
         with:
           name: Chainsaw-BONELAB-Code-Mod
-          path: 'Chainsaw BONELAB Code Mod/ChainsawCodeMod/bin/Release/**/ChainsawBONELABCodeMod.dll'
+          path: 'Chainsaw BONELAB Code Mod/bin/Release/**/ChainsawBONELABCodeMod.dll'
