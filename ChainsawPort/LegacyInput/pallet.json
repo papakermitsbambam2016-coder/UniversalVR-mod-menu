@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "root": { "ref": "o:1", "type": "t:1" },
+  "objects": {
+    "o:1": {
+      "barcode": "TankFullOfOofs.Chainsaw",
+      "title": "Chainsaw",
+      "description": "Current-SDK migration workspace for the legacy TankFullOfOofs Chainsaw.",
+      "unlockable": false,
+      "redacted": false,
+      "author": "TankFullOfOofs",
+      "version": "1.0.0-port",
+      "sdkVersion": "1.2.0",
+      "internal": false,
+      "crates": [{ "ref": "o:2", "type": "t:2" }],
+      "tags": [],
+      "isa": { "type": "t:1" }
+    },
+    "o:2": {
+      "barcode": "TankFullOfOofs.Chainsaw.Spawnable.Chainsaw",
+      "title": "Chainsaw",
+      "description": "Legacy Chainsaw migration target.",
+      "unlockable": false,
+      "redacted": false,
+      "mainAsset": "REPLACE_WITH_CURRENT_PACKED_ASSET_GUID",
+      "tags": ["Gadget"],
+      "packedAssets": [{ "title": "PreviewMesh", "guid": "REPLACE_WITH_CURRENT_PREVIEW_GUID" }],
+      "isa": { "type": "t:2" }
+    }
+  },
+  "types": {
+    "t:1": { "type": "t:1", "fullname": "SLZ.Marrow.Warehouse.Pallet" },
+    "t:2": { "type": "t:2", "fullname": "SLZ.Marrow.Warehouse.SpawnableCrate" }
+  }
+}
