@@ -1,0 +1,32 @@
+{
+  "referenceOnly": true,
+  "sourceMod": "Frictic.DoomHunterChainsaw",
+  "purpose": "Current BONELAB SDK 1.2.0 pallet shape reference for rebuilding the TankFullOfOofs Chainsaw. Do not ship this file as the final pallet.",
+  "observed": {
+    "formatVersion": 2,
+    "sdkVersion": "1.2.0",
+    "palletBarcode": "Frictic.DoomHunterChainsaw",
+    "spawnableBarcode": "Frictic.DoomHunterChainsaw.Spawnable.DoomHunterChainsaw",
+    "spawnableTags": ["Weapon", "Melee", "Blade"],
+    "hasMonoScriptsBundle": true,
+    "packedAssetKinds": ["PreviewMesh", "Spawnable", "MonoScripts"],
+    "assetPaths": {
+      "previewMesh": "Assets/_MarrowAssets/PackedAssets/Frictic.DoomHunterChainsaw/PreviewMesh/Doom Hunter Chainsaw PreviewMesh.mesh",
+      "spawnablePrefab": "Assets/Spawnable Folder/Doom Hunter Chainsaw/source/Doom Hunter Chainsaw.prefab"
+    },
+    "colliderBounds": {
+      "center": {"x": 0.0, "y": 0.0312106013, "z": 0.433540165},
+      "extents": {"x": 0.20574066, "y": 0.215871453, "z": 0.6816703}
+    }
+  },
+  "observedHierarchyMarkers": [
+    "Blade",
+    "slashTop",
+    "slashBottom",
+    "StabPoint",
+    "Grip",
+    "Pull Cord",
+    "AudioSource",
+    "OnMenuTap"
+  ]
+}
