@@ -5,7 +5,6 @@
     <AssemblyName>ChainsawBONELABCodeMod</AssemblyName>
     <RootNamespace>ChainsawBONELABCodeMod</RootNamespace>
     <Nullable>disable</Nullable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +14,8 @@
     <Reference Include="Il2CppInterop.Common" HintPath="References/Il2CppInterop.Common.dll" Private="false" />
     <Reference Include="Assembly-CSharp" HintPath="References/Assembly-CSharp.dll" Private="false" />
     <Reference Include="Il2CppSLZ.Marrow" HintPath="References/Il2CppSLZ.Marrow.dll" Private="false" />
+    <Reference Include="Il2Cppmscorlib" HintPath="References/Il2Cppmscorlib.dll" Private="false" />
+    <Reference Include="Il2CppSystem" HintPath="References/Il2CppSystem.dll" Private="false" />
     <Reference Include="UnityEngine" HintPath="References/UnityEngine.dll" Private="false" />
     <Reference Include="UnityEngine.CoreModule" HintPath="References/UnityEngine.CoreModule.dll" Private="false" />
     <Reference Include="UnityEngine.PhysicsModule" HintPath="References/UnityEngine.PhysicsModule.dll" Private="false" />
