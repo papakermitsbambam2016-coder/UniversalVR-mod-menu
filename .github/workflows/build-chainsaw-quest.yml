@@ -1,0 +1,44 @@
+name: Chainsaw Quest Unity CI
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ChainsawPort/**'
+      - '.github/workflows/build-chainsaw-quest.yml'
+
+jobs:
+  prepare-quest-project:
+    name: Prepare Quest Unity Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Run Unity 2021.3.16f1 preparation
+        uses: game-ci/unity-builder@v5.0.0
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ChainsawPort
+          unityVersion: 2021.3.16f1
+          targetPlatform: Android
+          buildMethod: ChainsawPort.Editor.ChainsawQuestCI.PrepareQuestBuild
+
+      - name: Upload Quest CI output
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: Chainsaw-Quest-CI-Output
+          path: |
+            ChainsawPort/Assets/ChainsawPort/Packed/**
+          if-no-files-found: warn
+
+# IMPORTANT:
+# This workflow deliberately does not label an ordinary Android Unity build as a
+# BONELAB Mod.io pallet. Once the reconstructed prefab and a compatible current
+# MarrowSDK/Extended SDK pallet are checked into ChainsawPort, the final packing
+# method must be wired to the SDK's real Pack for Quest operation.
