@@ -1,0 +1,8 @@
+BoneMenu spawn support expects the chainsaw bundle at:
+
+BONELAB/Mods/Chainsaw/chainsaw.bundle
+
+The code mod DLL should be installed in the normal LemonLoader/MelonLoader Mods location.
+
+BoneMenu path:
+Preferences -> BoneMenu -> Chainsaw -> Spawn Chainsaw
