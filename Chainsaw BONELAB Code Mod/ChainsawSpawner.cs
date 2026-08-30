@@ -44,14 +44,7 @@ namespace ChainsawBONELABCodeMod
 
                 if (prefab == null)
                 {
-                    var allPrefabs = bundle.LoadAllAssets<GameObject>();
-                    if (allPrefabs != null && allPrefabs.Length > 0)
-                        prefab = allPrefabs[0];
-                }
-
-                if (prefab == null)
-                {
-                    MelonLogger.Error("[Chainsaw] No GameObject prefab was found in chainsaw.bundle.");
+                    MelonLogger.Error("[Chainsaw] No GameObject prefab named Chainsaw was found in chainsaw.bundle.");
                     return;
                 }
 
