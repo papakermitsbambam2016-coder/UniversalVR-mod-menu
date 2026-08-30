@@ -93,6 +93,7 @@ jobs:
           set -euo pipefail
 
           PACKAGE="$RUNNER_TEMP/chainsaw-thunderstore"
+          rm -rf "$PACKAGE"
           mkdir -p "$PACKAGE/Mods"
 
           DLL=$(find 'Chainsaw BONELAB Code Mod/bin/Release' -type f -name 'ChainsawBONELABCodeMod.dll' -print -quit)
@@ -130,13 +131,10 @@ jobs:
               row = bytearray([0])
               for x in range(w):
                   r, g, b, a = 24, 24, 28, 255
-                  # orange saw body
                   if 48 <= x <= 204 and 82 <= y <= 166:
                       r, g, b = 230, 106, 34
-                  # dark blade/chain bar
                   if 112 <= x <= 230 and 108 <= y <= 142:
                       r, g, b = 48, 48, 54
-                  # handle
                   if 58 <= x <= 112 and 52 <= y <= 94:
                       r, g, b = 64, 64, 72
                   if 72 <= x <= 98 and 64 <= y <= 82:
@@ -151,11 +149,13 @@ jobs:
           PY
 
           echo "Thunderstore package version: $VERSION"
-          echo 'Package contents:'
+          echo 'Package contents that will become the artifact ZIP root:'
           find "$PACKAGE" -maxdepth 2 -type f -print
 
-          (cd "$PACKAGE" && zip -r "$GITHUB_WORKSPACE/Chainsaw-BONELAB-Code-Mod-Thunderstore-$VERSION.zip" .)
-          echo "THUNDERSTORE_ZIP=Chainsaw-BONELAB-Code-Mod-Thunderstore-$VERSION.zip" >> "$GITHUB_ENV"
+          test -f "$PACKAGE/manifest.json"
+          test -f "$PACKAGE/README.md"
+          test -f "$PACKAGE/icon.png"
+          test -f "$PACKAGE/Mods/ChainsawBONELABCodeMod.dll"
 
       - name: Upload Quest DLL artifact
         uses: actions/upload-artifact@v4
@@ -168,5 +168,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Chainsaw-BONELAB-Code-Mod-Thunderstore
-          path: '${{ env.THUNDERSTORE_ZIP }}'
+          path: '${{ runner.temp }}/chainsaw-thunderstore/'
           if-no-files-found: error
