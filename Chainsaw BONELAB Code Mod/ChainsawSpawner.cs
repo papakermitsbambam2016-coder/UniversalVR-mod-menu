@@ -20,7 +20,7 @@ namespace ChainsawBONELABCodeMod
             try
             {
                 string bundlePath = Path.Combine(
-                    MelonEnvironment.GameRootDirectory,
+                    Directory.GetCurrentDirectory(),
                     "Mods",
                     "Chainsaw",
                     "chainsaw.bundle");
@@ -44,7 +44,7 @@ namespace ChainsawBONELABCodeMod
 
                 if (prefab == null)
                 {
-                    GameObject[] allPrefabs = bundle.LoadAllAssets<GameObject>();
+                    var allPrefabs = bundle.LoadAllAssets<GameObject>();
                     if (allPrefabs != null && allPrefabs.Length > 0)
                         prefab = allPrefabs[0];
                 }
