@@ -6,7 +6,7 @@ using Il2CppSLZ.Marrow.AI;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(ChainsawBONELABCodeMod.Main), "Chainsaw BONELAB Code Mod", "1.1.0", "TankFullOfOofs Port")]
+[assembly: MelonInfo(typeof(ChainsawBONELABCodeMod.Main), "Chainsaw BONELAB Code Mod", "1.2.0", "TankFullOfOofs Port")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace ChainsawBONELABCodeMod
@@ -20,7 +20,7 @@ namespace ChainsawBONELABCodeMod
         {
             Hooking.OnGrabObject += OnGrab;
             Hooking.OnReleaseObject += OnRelease;
-            MelonLogger.Msg("Chainsaw BONELAB Code Mod 1.1.0 initialized.");
+            MelonLogger.Msg("Chainsaw BONELAB Code Mod 1.2.0 initialized. Doom Hunter Chainsaw support enabled.");
         }
 
         public override void OnDeinitializeMelon()
@@ -69,7 +69,8 @@ namespace ChainsawBONELABCodeMod
             state.Start();
 
             MelonLogger.Msg(
-                "Chainsaw grabbed. Blades=" + state.BladeCount +
+                "Chainsaw detected: " + chainsawRoot.name +
+                ". Blades=" + state.BladeCount +
                 ", BladeColliders=" + state.BladeColliderCount +
                 ", MotorSounds=" + state.MotorSoundCount);
         }
@@ -88,24 +89,82 @@ namespace ChainsawBONELABCodeMod
             MelonLogger.Msg("Chainsaw released; runtime behavior disabled.");
         }
 
+        private static bool LooksLikeChainsawName(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return false;
+
+            return value.IndexOf("chainsaw", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   value.IndexOf("DoomHunterChainsaw", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   value.IndexOf("Doom Hunter Chainsaw", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsDoomHunterMarker(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return false;
+
+            return value.IndexOf("slashTop", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   value.IndexOf("slashBottom", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   value.IndexOf("Pull Cord", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   value.IndexOf("StabPoint", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         private static GameObject ResolveChainsawRoot(GameObject grabbed)
         {
             Transform current = grabbed.transform;
+            GameObject highestLikelyRoot = null;
 
-            // BONELAB often reports the grabbed child/Grip rather than the prefab root.
-            // Walk upward first so GripPoint/GripCollider can still resolve to Chainsaw.
+            // BoneLib can report a Grip or other child instead of the pallet root.
+            // Walk all the way upward and remember the highest object whose name says chainsaw.
             while (current != null)
             {
-                string currentName = current.name ?? string.Empty;
-                if (currentName.IndexOf("chainsaw", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return current.gameObject;
+                if (LooksLikeChainsawName(current.name))
+                    highestLikelyRoot = current.gameObject;
 
                 current = current.parent;
             }
 
-            // Fall back to the grabbed object if a child is clearly named like the legacy prefab.
-            Transform[] children = grabbed.GetComponentsInChildren<Transform>(true);
+            if (highestLikelyRoot != null)
+                return highestLikelyRoot;
+
+            // Doom Hunter Chainsaw markers recovered from the current SDK 1.2.0 pallet.
+            // If the grabbed grip belongs to a hierarchy containing these markers, use the highest
+            // parent below the scene root so all blade/audio objects are included.
+            Transform searchRoot = grabbed.transform;
+            while (searchRoot.parent != null && searchRoot.parent.parent != null)
+                searchRoot = searchRoot.parent;
+
+            Transform[] children = searchRoot.GetComponentsInChildren<Transform>(true);
+            int doomMarkers = 0;
+            bool hasBlade = false;
+            bool hasGrip = false;
+
             foreach (Transform child in children)
+            {
+                if (child == null)
+                    continue;
+
+                string n = child.name ?? string.Empty;
+
+                if (IsDoomHunterMarker(n))
+                    doomMarkers++;
+
+                if (n.IndexOf("Blade", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("slashTop", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("slashBottom", StringComparison.OrdinalIgnoreCase) >= 0)
+                    hasBlade = true;
+
+                if (n.IndexOf("Grip", StringComparison.OrdinalIgnoreCase) >= 0)
+                    hasGrip = true;
+            }
+
+            if (doomMarkers >= 2 && hasBlade && hasGrip)
+                return searchRoot.gameObject;
+
+            // Legacy TankFullOfOofs fallback.
+            Transform[] grabbedChildren = grabbed.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in grabbedChildren)
             {
                 if (child == null)
                     continue;
@@ -143,7 +202,8 @@ namespace ChainsawBONELABCodeMod
                         continue;
 
                     string n = t.name ?? string.Empty;
-                    if (n.IndexOf("BladeTransform", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (n.IndexOf("BladeTransform", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        string.Equals(n, "Blade", StringComparison.OrdinalIgnoreCase))
                         blades.Add(t);
                 }
 
@@ -155,7 +215,10 @@ namespace ChainsawBONELABCodeMod
 
                     string n = c.name ?? string.Empty;
                     if (n.IndexOf("BladeCollider", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        n.IndexOf("Blade", StringComparison.OrdinalIgnoreCase) >= 0)
+                        n.IndexOf("Blade", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("slashTop", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("slashBottom", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("StabPoint", StringComparison.OrdinalIgnoreCase) >= 0)
                         bladeColliders.Add(c);
                 }
 
@@ -169,7 +232,8 @@ namespace ChainsawBONELABCodeMod
                     if (n.IndexOf("IdleSound", StringComparison.OrdinalIgnoreCase) >= 0 ||
                         n.IndexOf("BladeAudio", StringComparison.OrdinalIgnoreCase) >= 0 ||
                         n.IndexOf("Motor", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        n.IndexOf("Chainsaw", StringComparison.OrdinalIgnoreCase) >= 0)
+                        n.IndexOf("Chainsaw", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("Idle", StringComparison.OrdinalIgnoreCase) >= 0)
                         motorSounds.Add(audio);
                 }
             }
