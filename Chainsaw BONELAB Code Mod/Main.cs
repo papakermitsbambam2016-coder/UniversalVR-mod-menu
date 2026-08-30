@@ -6,7 +6,7 @@ using Il2CppSLZ.Marrow.AI;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(ChainsawBONELABCodeMod.Main), "Chainsaw BONELAB Code Mod", "1.2.0", "TankFullOfOofs Port")]
+[assembly: MelonInfo(typeof(ChainsawBONELABCodeMod.Main), "Chainsaw BONELAB Code Mod", "1.3.0", "TankFullOfOofs Port")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace ChainsawBONELABCodeMod
@@ -20,7 +20,11 @@ namespace ChainsawBONELABCodeMod
         {
             Hooking.OnGrabObject += OnGrab;
             Hooking.OnReleaseObject += OnRelease;
-            MelonLogger.Msg("Chainsaw BONELAB Code Mod 1.2.0 initialized. Doom Hunter Chainsaw support enabled.");
+
+            ChainsawSpawner.Initialize();
+            ChainsawMenu.Setup();
+
+            MelonLogger.Msg("Chainsaw BONELAB Code Mod 1.3.0 initialized. BoneMenu spawning support enabled.");
         }
 
         public override void OnDeinitializeMelon()
@@ -32,10 +36,14 @@ namespace ChainsawBONELABCodeMod
                 state.Stop();
 
             held.Clear();
+            ChainsawSpawner.DespawnAll();
         }
 
         public override void OnUpdate()
         {
+            if (!Config.Enabled)
+                return;
+
             float dt = Time.deltaTime;
             damageTimer -= dt;
 
@@ -45,7 +53,7 @@ namespace ChainsawBONELABCodeMod
             if (damageTimer > 0f)
                 return;
 
-            damageTimer = Config.DamageInterval;
+            damageTimer = Mathf.Max(0.025f, Config.DamageInterval);
 
             foreach (var state in held.Values)
                 state.DamageNearby();
@@ -53,7 +61,7 @@ namespace ChainsawBONELABCodeMod
 
         private void OnGrab(GameObject objectToAttach, Hand hand)
         {
-            if (objectToAttach == null || hand == null)
+            if (!Config.Enabled || objectToAttach == null || hand == null)
                 return;
 
             GameObject chainsawRoot = ResolveChainsawRoot(objectToAttach);
@@ -115,8 +123,6 @@ namespace ChainsawBONELABCodeMod
             Transform current = grabbed.transform;
             GameObject highestLikelyRoot = null;
 
-            // BoneLib can report a Grip or other child instead of the pallet root.
-            // Walk all the way upward and remember the highest object whose name says chainsaw.
             while (current != null)
             {
                 if (LooksLikeChainsawName(current.name))
@@ -128,9 +134,6 @@ namespace ChainsawBONELABCodeMod
             if (highestLikelyRoot != null)
                 return highestLikelyRoot;
 
-            // Doom Hunter Chainsaw markers recovered from the current SDK 1.2.0 pallet.
-            // If the grabbed grip belongs to a hierarchy containing these markers, use the highest
-            // parent below the scene root so all blade/audio objects are included.
             Transform searchRoot = grabbed.transform;
             while (searchRoot.parent != null && searchRoot.parent.parent != null)
                 searchRoot = searchRoot.parent;
@@ -162,7 +165,6 @@ namespace ChainsawBONELABCodeMod
             if (doomMarkers >= 2 && hasBlade && hasGrip)
                 return searchRoot.gameObject;
 
-            // Legacy TankFullOfOofs fallback.
             Transform[] grabbedChildren = grabbed.GetComponentsInChildren<Transform>(true);
             foreach (Transform child in grabbedChildren)
             {
@@ -203,7 +205,9 @@ namespace ChainsawBONELABCodeMod
 
                     string n = t.name ?? string.Empty;
                     if (n.IndexOf("BladeTransform", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        string.Equals(n, "Blade", StringComparison.OrdinalIgnoreCase))
+                        string.Equals(n, "Blade", StringComparison.OrdinalIgnoreCase) ||
+                        n.IndexOf("slashTop", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("slashBottom", StringComparison.OrdinalIgnoreCase) >= 0)
                         blades.Add(t);
                 }
 
@@ -241,6 +245,9 @@ namespace ChainsawBONELABCodeMod
             public void Start()
             {
                 running = true;
+
+                if (!Config.MotorSound)
+                    return;
 
                 foreach (AudioSource audio in motorSounds)
                 {
