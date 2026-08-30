@@ -1,0 +1,66 @@
+{
+  "version": 2,
+  "root": {
+    "ref": "1",
+    "type": "pallet#0"
+  },
+  "objects": {
+    "1": {
+      "barcode": "TankFullOfOofs.Chainsaw",
+      "title": "Chainsaw",
+      "description": "Quest-ready Chainsaw rebuild for current BONELAB. Runtime behavior is enhanced by the companion ChainsawBONELABCodeMod.dll.",
+      "unlockable": false,
+      "redacted": false,
+      "author": "TankFullOfOofs Port",
+      "version": "1.0.0",
+      "sdkVersion": "1.2.0",
+      "internal": false,
+      "crates": [
+        {
+          "ref": "2",
+          "type": "crate-spawnable#0"
+        }
+      ],
+      "dataCards": [],
+      "tags": [],
+      "changelogs": [],
+      "isa": {
+        "type": "pallet#0"
+      }
+    },
+    "2": {
+      "barcode": "TankFullOfOofs.Chainsaw.Spawnable.Chainsaw",
+      "title": "Chainsaw",
+      "description": "Spawnable Chainsaw for BONELAB Quest.",
+      "unlockable": false,
+      "redacted": false,
+      "packedAssets": [
+        {
+          "title": "PreviewMesh",
+          "guid": "REPLACE_WITH_CURRENT_PREVIEW_MESH_GUID"
+        }
+      ],
+      "mainAsset": "REPLACE_WITH_CURRENT_CHAINSAW_PREFAB_GUID",
+      "tags": [
+        "Weapon",
+        "Melee",
+        "Blade"
+      ],
+      "colliderBounds": {
+        "center": {
+          "x": 0.0278568268,
+          "y": 0.08067175,
+          "z": -0.4257303
+        },
+        "extents": {
+          "x": 0.133988515,
+          "y": 0.177462861,
+          "z": 0.524330556
+        }
+      },
+      "isa": {
+        "type": "crate-spawnable#0"
+      }
+    }
+  }
+}
