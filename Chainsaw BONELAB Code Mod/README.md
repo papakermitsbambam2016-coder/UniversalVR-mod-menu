@@ -1,14 +1,19 @@
 # Chainsaw BONELAB Code Mod
 
-This is the **code-mod side** of the Chainsaw port.
+Quest-focused BONELAB code mod with BoneMenu controls and chainsaw runtime behavior.
 
-It uses the MelonLoader C# API and BoneLib. BoneLib provides grab/release hooks and an AIBrain damage helper. On Quest, LemonLoader is the Android loader used for compatible MelonLoader-style mods.
+## BoneMenu
 
-Current runtime source:
-- detects the legacy Chainsaw when grabbed
-- rotates blade transforms
-- starts/stops motor/idle AudioSources when present
-- checks blade colliders for nearby AIBrain targets
-- applies damage through BoneLib
+Open:
 
-The source still needs the target Quest reference DLLs before a real DLL can be compiled. The old Chainsaw AssetBundles are separate from this code mod.
+Preferences -> BoneMenu -> Chainsaw
+
+Options include Spawn Chainsaw, Despawn Chainsaws, Enabled, Motor Sound, Damage, Blade Speed, Damage Interval, and Debug Mode.
+
+## Bundle install path
+
+The spawner expects the chainsaw AssetBundle at:
+
+BONELAB/Mods/Chainsaw/chainsaw.bundle
+
+Install the compiled ChainsawBONELABCodeMod.dll in the normal LemonLoader/MelonLoader Mods location.
