@@ -19,32 +19,55 @@ namespace ChainsawBONELABCodeMod
 
             try
             {
-                string bundlePath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "Mods",
-                    "Chainsaw",
-                    "chainsaw.bundle");
-
-                if (!File.Exists(bundlePath))
+                string bundlePath = FindBundlePath();
+                if (string.IsNullOrEmpty(bundlePath))
                 {
-                    MelonLogger.Warning("[Chainsaw] chainsaw.bundle not found yet: " + bundlePath);
+                    MelonLogger.Warning("[Chainsaw] chainsaw.bundle was not found in any expected Quest Mods path.");
+                    MelonLogger.Warning("[Chainsaw] Expected: " + Path.Combine(Application.persistentDataPath, "Mods", "Chainsaw", "chainsaw.bundle"));
                     return;
                 }
+
+                MelonLogger.Msg("[Chainsaw] Loading bundle from: " + bundlePath);
 
                 bundle = AssetBundle.LoadFromFile(bundlePath);
                 if (bundle == null)
                 {
-                    MelonLogger.Error("[Chainsaw] Failed to load chainsaw.bundle.");
+                    MelonLogger.Error("[Chainsaw] Failed to load chainsaw.bundle. The old bundle may be incompatible with the current BONELAB/Unity runtime.");
                     return;
                 }
 
-                prefab = bundle.LoadAsset<GameObject>("Chainsaw.prefab");
+                string[] assetNames = bundle.GetAllAssetNames();
+                if (assetNames != null)
+                {
+                    MelonLogger.Msg("[Chainsaw] Bundle asset count: " + assetNames.Length);
+                    foreach (string assetName in assetNames)
+                        MelonLogger.Msg("[Chainsaw] Bundle asset: " + assetName);
+                }
+
+                prefab = TryLoadPrefab("Chainsaw.prefab");
                 if (prefab == null)
-                    prefab = bundle.LoadAsset<GameObject>("Chainsaw");
+                    prefab = TryLoadPrefab("Chainsaw");
+
+                if (prefab == null && assetNames != null)
+                {
+                    foreach (string assetName in assetNames)
+                    {
+                        if (string.IsNullOrEmpty(assetName))
+                            continue;
+
+                        GameObject candidate = TryLoadPrefab(assetName);
+                        if (candidate != null)
+                        {
+                            prefab = candidate;
+                            MelonLogger.Msg("[Chainsaw] Using GameObject asset: " + assetName);
+                            break;
+                        }
+                    }
+                }
 
                 if (prefab == null)
                 {
-                    MelonLogger.Error("[Chainsaw] No GameObject prefab named Chainsaw was found in chainsaw.bundle.");
+                    MelonLogger.Error("[Chainsaw] Bundle loaded, but no GameObject prefab could be loaded from it.");
                     return;
                 }
 
@@ -53,6 +76,45 @@ namespace ChainsawBONELABCodeMod
             catch (Exception ex)
             {
                 MelonLogger.Error("[Chainsaw] AssetBundle load failed: " + ex);
+            }
+        }
+
+        private static string FindBundlePath()
+        {
+            string persistentPath = Path.Combine(
+                Application.persistentDataPath,
+                "Mods",
+                "Chainsaw",
+                "chainsaw.bundle");
+
+            if (File.Exists(persistentPath))
+                return persistentPath;
+
+            string currentPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "Mods",
+                "Chainsaw",
+                "chainsaw.bundle");
+
+            if (File.Exists(currentPath))
+                return currentPath;
+
+            string explicitQuestPath = "/storage/emulated/0/Android/data/com.StressLevelZero.BONELAB/files/Mods/Chainsaw/chainsaw.bundle";
+            if (File.Exists(explicitQuestPath))
+                return explicitQuestPath;
+
+            return null;
+        }
+
+        private static GameObject TryLoadPrefab(string assetName)
+        {
+            try
+            {
+                return bundle.LoadAsset<GameObject>(assetName);
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -69,7 +131,7 @@ namespace ChainsawBONELABCodeMod
 
             if (prefab == null)
             {
-                MelonLogger.Warning("[Chainsaw] Can't spawn yet because chainsaw.bundle is missing or invalid.");
+                MelonLogger.Warning("[Chainsaw] Can't spawn because chainsaw.bundle is missing, incompatible, or contains no loadable GameObject prefab.");
                 return;
             }
 
@@ -84,10 +146,17 @@ namespace ChainsawBONELABCodeMod
             Quaternion rotation = Quaternion.LookRotation(camera.transform.forward, Vector3.up);
 
             GameObject chainsaw = UnityEngine.Object.Instantiate(prefab, position, rotation);
+            if (chainsaw == null)
+            {
+                MelonLogger.Error("[Chainsaw] Instantiate returned null.");
+                return;
+            }
+
             chainsaw.name = "Chainsaw";
+            chainsaw.SetActive(true);
             spawnedChainsaws.Add(chainsaw);
 
-            MelonLogger.Msg("[Chainsaw] Spawned Chainsaw from BoneMenu.");
+            MelonLogger.Msg("[Chainsaw] Spawned Chainsaw from BoneMenu at " + position);
         }
 
         public static void DespawnAll()
