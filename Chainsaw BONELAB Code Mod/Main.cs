@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using BoneLib;
+using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.AI;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(ChainsawBONELABCodeMod.Main), "Chainsaw BONELAB Code Mod", "1.0.0", "TankFullOfOofs Port")]
+[assembly: MelonInfo(typeof(ChainsawBONELABCodeMod.Main), "Chainsaw BONELAB Code Mod", "1.1.0", "TankFullOfOofs Port")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace ChainsawBONELABCodeMod
@@ -19,14 +20,17 @@ namespace ChainsawBONELABCodeMod
         {
             Hooking.OnGrabObject += OnGrab;
             Hooking.OnReleaseObject += OnRelease;
-            MelonLogger.Msg("Chainsaw BONELAB Code Mod 1.0.0 initialized.");
+            MelonLogger.Msg("Chainsaw BONELAB Code Mod 1.1.0 initialized.");
         }
 
         public override void OnDeinitializeMelon()
         {
             Hooking.OnGrabObject -= OnGrab;
             Hooking.OnReleaseObject -= OnRelease;
-            foreach (var state in held.Values) state.Stop();
+
+            foreach (var state in held.Values)
+                state.Stop();
+
             held.Clear();
         }
 
@@ -34,45 +38,86 @@ namespace ChainsawBONELABCodeMod
         {
             float dt = Time.deltaTime;
             damageTimer -= dt;
-            foreach (var state in held.Values) state.Tick(dt);
-            if (damageTimer <= 0f)
-            {
-                damageTimer = 0.075f;
-                foreach (var state in held.Values) state.DamageNearby();
-            }
+
+            foreach (var state in held.Values)
+                state.Tick(dt);
+
+            if (damageTimer > 0f)
+                return;
+
+            damageTimer = Config.DamageInterval;
+
+            foreach (var state in held.Values)
+                state.DamageNearby();
         }
 
         private void OnGrab(GameObject objectToAttach, Hand hand)
         {
-            if (objectToAttach == null || hand == null || !LooksLikeChainsaw(objectToAttach)) return;
-            if (held.TryGetValue(hand, out var old)) old.Stop();
-            var state = new ChainsawRuntime(objectToAttach);
+            if (objectToAttach == null || hand == null)
+                return;
+
+            GameObject chainsawRoot = ResolveChainsawRoot(objectToAttach);
+            if (chainsawRoot == null)
+                return;
+
+            ChainsawRuntime old;
+            if (held.TryGetValue(hand, out old))
+                old.Stop();
+
+            var state = new ChainsawRuntime(chainsawRoot);
             held[hand] = state;
             state.Start();
-            MelonLogger.Msg("Chainsaw grabbed; runtime behavior enabled.");
+
+            MelonLogger.Msg(
+                "Chainsaw grabbed. Blades=" + state.BladeCount +
+                ", BladeColliders=" + state.BladeColliderCount +
+                ", MotorSounds=" + state.MotorSoundCount);
         }
 
         private void OnRelease(Hand hand)
         {
-            if (hand == null) return;
-            if (held.TryGetValue(hand, out var state))
-            {
-                state.Stop();
-                held.Remove(hand);
-                MelonLogger.Msg("Chainsaw released; runtime behavior disabled.");
-            }
+            if (hand == null)
+                return;
+
+            ChainsawRuntime state;
+            if (!held.TryGetValue(hand, out state))
+                return;
+
+            state.Stop();
+            held.Remove(hand);
+            MelonLogger.Msg("Chainsaw released; runtime behavior disabled.");
         }
 
-        private static bool LooksLikeChainsaw(GameObject go)
+        private static GameObject ResolveChainsawRoot(GameObject grabbed)
         {
-            string name = go.name ?? string.Empty;
-            if (name.IndexOf("chainsaw", StringComparison.OrdinalIgnoreCase) >= 0) return true;
-            foreach (var t in go.GetComponentsInChildren<Transform>(true))
+            Transform current = grabbed.transform;
+
+            // BONELAB often reports the grabbed child/Grip rather than the prefab root.
+            // Walk upward first so GripPoint/GripCollider can still resolve to Chainsaw.
+            while (current != null)
             {
-                if (t == null) continue;
-                if ((t.name ?? string.Empty).IndexOf("chainsaw", StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                string currentName = current.name ?? string.Empty;
+                if (currentName.IndexOf("chainsaw", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return current.gameObject;
+
+                current = current.parent;
             }
-            return false;
+
+            // Fall back to the grabbed object if a child is clearly named like the legacy prefab.
+            Transform[] children = grabbed.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in children)
+            {
+                if (child == null)
+                    continue;
+
+                string name = child.name ?? string.Empty;
+                if (name.IndexOf("BladeTransform", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("BladeCollider", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("IdleSound", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return grabbed;
+            }
+
+            return null;
         }
 
         private sealed class ChainsawRuntime
@@ -83,28 +128,48 @@ namespace ChainsawBONELABCodeMod
             private readonly List<AudioSource> motorSounds = new List<AudioSource>();
             private bool running;
 
+            public int BladeCount { get { return blades.Count; } }
+            public int BladeColliderCount { get { return bladeColliders.Count; } }
+            public int MotorSoundCount { get { return motorSounds.Count; } }
+
             public ChainsawRuntime(GameObject rootObject)
             {
                 root = rootObject;
-                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+
+                Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
+                foreach (Transform t in transforms)
                 {
-                    if (t == null) continue;
+                    if (t == null)
+                        continue;
+
                     string n = t.name ?? string.Empty;
-                    if (n.IndexOf("BladeTransform", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("Blade", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (n.IndexOf("BladeTransform", StringComparison.OrdinalIgnoreCase) >= 0)
                         blades.Add(t);
                 }
-                foreach (var c in root.GetComponentsInChildren<Collider>(true))
+
+                Collider[] colliders = root.GetComponentsInChildren<Collider>(true);
+                foreach (Collider c in colliders)
                 {
-                    if (c == null) continue;
+                    if (c == null)
+                        continue;
+
                     string n = c.name ?? string.Empty;
-                    if (n.IndexOf("BladeCollider", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("Blade", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (n.IndexOf("BladeCollider", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("Blade", StringComparison.OrdinalIgnoreCase) >= 0)
                         bladeColliders.Add(c);
                 }
-                foreach (var audio in root.GetComponentsInChildren<AudioSource>(true))
+
+                AudioSource[] audioSources = root.GetComponentsInChildren<AudioSource>(true);
+                foreach (AudioSource audio in audioSources)
                 {
-                    if (audio == null) continue;
+                    if (audio == null)
+                        continue;
+
                     string n = audio.name ?? string.Empty;
-                    if (n.IndexOf("IdleSound", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("Motor", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("Chainsaw", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (n.IndexOf("IdleSound", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("BladeAudio", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("Motor", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        n.IndexOf("Chainsaw", StringComparison.OrdinalIgnoreCase) >= 0)
                         motorSounds.Add(audio);
                 }
             }
@@ -112,48 +177,82 @@ namespace ChainsawBONELABCodeMod
             public void Start()
             {
                 running = true;
-                foreach (var audio in motorSounds)
+
+                foreach (AudioSource audio in motorSounds)
                 {
                     try
                     {
                         audio.loop = true;
-                        if (audio.clip != null && !audio.isPlaying) audio.Play();
+                        if (audio.clip != null && !audio.isPlaying)
+                            audio.Play();
                     }
-                    catch { }
+                    catch (Exception e)
+                    {
+                        MelonLogger.Warning("Chainsaw audio start failed: " + e.Message);
+                    }
                 }
             }
 
             public void Stop()
             {
                 running = false;
-                foreach (var audio in motorSounds)
+
+                foreach (AudioSource audio in motorSounds)
                 {
-                    try { if (audio.isPlaying) audio.Stop(); } catch { }
+                    try
+                    {
+                        if (audio != null && audio.isPlaying)
+                            audio.Stop();
+                    }
+                    catch { }
                 }
             }
 
             public void Tick(float dt)
             {
-                if (!running || root == null) return;
-                foreach (var blade in blades)
-                    if (blade != null) blade.Rotate(Vector3.forward, 1800f * dt, Space.Self);
+                if (!running || root == null)
+                    return;
+
+                foreach (Transform blade in blades)
+                {
+                    if (blade != null)
+                        blade.Rotate(Vector3.forward, Config.BladeDegreesPerSecond * dt, Space.Self);
+                }
             }
 
             public void DamageNearby()
             {
-                if (!running) return;
-                foreach (var collider in bladeColliders)
+                if (!running || root == null)
+                    return;
+
+                var damagedBrains = new HashSet<AIBrain>();
+
+                foreach (Collider collider in bladeColliders)
                 {
-                    if (collider == null || !collider.enabled) continue;
+                    if (collider == null || !collider.enabled)
+                        continue;
+
                     Vector3 center = collider.bounds.center;
                     float radius = Mathf.Max(0.035f, collider.bounds.extents.magnitude * 0.45f);
-                    foreach (var hit in Physics.OverlapSphere(center, radius))
+                    Collider[] hits = Physics.OverlapSphere(center, radius);
+
+                    foreach (Collider hit in hits)
                     {
-                        if (hit == null) continue;
-                        var brain = hit.GetComponentInParent<AIBrain>();
-                        if (brain == null) continue;
-                        try { brain.DealDamage(7.5f); }
-                        catch (Exception e) { MelonLogger.Warning("Chainsaw damage failed: " + e.Message); }
+                        if (hit == null || hit.transform.IsChildOf(root.transform))
+                            continue;
+
+                        AIBrain brain = hit.GetComponentInParent<AIBrain>();
+                        if (brain == null || !damagedBrains.Add(brain))
+                            continue;
+
+                        try
+                        {
+                            brain.DealDamage(Config.Damage);
+                        }
+                        catch (Exception e)
+                        {
+                            MelonLogger.Warning("Chainsaw damage failed: " + e.Message);
+                        }
                     }
                 }
             }
