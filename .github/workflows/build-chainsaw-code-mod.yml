@@ -70,6 +70,7 @@ jobs:
           copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.CoreModule.dll" 'UnityEngine.CoreModule.dll'
           copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.PhysicsModule.dll" 'UnityEngine.PhysicsModule.dll'
           copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.AudioModule.dll" 'UnityEngine.AudioModule.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.AssetBundleModule.dll" 'UnityEngine.AssetBundleModule.dll'
 
           echo 'References ready:'
           ls -lh "$REFS"/*.dll
