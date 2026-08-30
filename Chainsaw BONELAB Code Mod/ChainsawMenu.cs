@@ -19,8 +19,26 @@ namespace ChainsawBONELABCodeMod
             {
                 page = Page.Root.CreatePage("Chainsaw", Color.red);
 
-                page.CreateFunction("Spawn Chainsaw", Color.green, () => ChainsawSpawner.Spawn());
-                page.CreateFunction("Despawn Chainsaws", Color.red, () => ChainsawSpawner.DespawnAll());
+                page.CreateFunction("Spawn Chainsaw", Color.green, () =>
+                {
+                    MelonLogger.Msg("[Chainsaw] Spawn button pressed.");
+
+                    try
+                    {
+                        ChainsawSpawner.Spawn();
+                        MelonLogger.Msg("[Chainsaw] Spawn callback finished.");
+                    }
+                    catch (Exception ex)
+                    {
+                        MelonLogger.Error("[Chainsaw] Spawn callback crashed: " + ex);
+                    }
+                });
+
+                page.CreateFunction("Despawn Chainsaws", Color.red, () =>
+                {
+                    MelonLogger.Msg("[Chainsaw] Despawn button pressed.");
+                    ChainsawSpawner.DespawnAll();
+                });
 
                 page.CreateBool("Enabled", Color.green, Config.Enabled, value =>
                 {
