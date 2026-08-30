@@ -47,28 +47,27 @@ jobs:
             -o "$TEMP/lemon.zip"
           unzip -q "$TEMP/lemon.zip" -d "$TEMP/lemon"
 
-          copy_reference() {
-            local name="$1"
-            local source
-            source=$(find "$TEMP" -type f -name "$name" -print -quit)
-            if [ -z "$source" ]; then
-              echo "ERROR: Could not find $name in downloaded reference packages."
-              echo 'Available matching DLLs:'
-              find "$TEMP" -type f -iname '*.dll' -printf '%p\n' | sort | head -400
+          copy_from() {
+            local source="$1"
+            local dest="$2"
+            if [ ! -f "$source" ]; then
+              echo "ERROR: Missing expected reference: $source"
               exit 1
             fi
-            echo "Using $source"
-            cp "$source" "$REFS/$name"
+            echo "Using $source -> $dest"
+            cp "$source" "$REFS/$dest"
           }
 
-          copy_reference 'MelonLoader.dll'
-          copy_reference 'BoneLib.dll'
-          copy_reference 'Il2CppInterop.Runtime.dll'
-          copy_reference 'Il2CppInterop.Common.dll'
-          copy_reference 'Il2CppAssembly-CSharp.dll'
-          copy_reference 'UnityEngine.CoreModule.dll'
-          copy_reference 'UnityEngine.PhysicsModule.dll'
-          copy_reference 'UnityEngine.AudioModule.dll'
+          copy_from "$TEMP/lemon/MelonLoader/net8/MelonLoader.dll" 'MelonLoader.dll'
+          copy_from "$TEMP/bonelib/Mods/BoneLib.dll" 'BoneLib.dll'
+          copy_from "$TEMP/lemon/MelonLoader/net8/Il2CppInterop.Runtime.dll" 'Il2CppInterop.Runtime.dll'
+          copy_from "$TEMP/lemon/MelonLoader/net8/Il2CppInterop.Common.dll" 'Il2CppInterop.Common.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/Assembly-CSharp.dll" 'Assembly-CSharp.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/Il2CppSLZ.Marrow.dll" 'Il2CppSLZ.Marrow.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.dll" 'UnityEngine.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.CoreModule.dll" 'UnityEngine.CoreModule.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.PhysicsModule.dll" 'UnityEngine.PhysicsModule.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.AudioModule.dll" 'UnityEngine.AudioModule.dll'
 
           echo 'References ready:'
           ls -lh "$REFS"/*.dll
