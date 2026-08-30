@@ -64,6 +64,8 @@ jobs:
           copy_from "$TEMP/lemon/MelonLoader/net8/Il2CppInterop.Common.dll" 'Il2CppInterop.Common.dll'
           copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/Assembly-CSharp.dll" 'Assembly-CSharp.dll'
           copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/Il2CppSLZ.Marrow.dll" 'Il2CppSLZ.Marrow.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/Il2Cppmscorlib.dll" 'Il2Cppmscorlib.dll'
+          copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/Il2CppSystem.dll" 'Il2CppSystem.dll'
           copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.dll" 'UnityEngine.dll'
           copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.CoreModule.dll" 'UnityEngine.CoreModule.dll'
           copy_from "$TEMP/interop/MelonLoader/Il2CppAssemblies/UnityEngine.PhysicsModule.dll" 'UnityEngine.PhysicsModule.dll'
