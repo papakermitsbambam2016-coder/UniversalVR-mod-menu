@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using BoneLib.BoneMenu;
 using MelonLoader;
 using UnityEngine;
@@ -9,83 +8,56 @@ namespace ChainsawBONELABCodeMod
     internal static class ChainsawMenu
     {
         private static Page page;
+        private static bool initialized;
 
         public static void Setup()
         {
+            if (initialized)
+                return;
+
             try
             {
-                page = Page.Root.CreatePage(
-                    "Chainsaw",
-                    Color.red
-                );
+                page = Page.Root.CreatePage("Chainsaw", Color.red);
 
-                page.CreateFunction(
-                    "Spawn Chainsaw",
-                    Color.green,
-                    () => ChainsawSpawner.Spawn()
-                );
+                page.CreateFunction("Spawn Chainsaw", Color.green, () => ChainsawSpawner.Spawn());
+                page.CreateFunction("Despawn Chainsaws", Color.red, () => ChainsawSpawner.DespawnAll());
 
-                page.CreateFunction(
-                    "Despawn Chainsaws",
-                    Color.red,
-                    () => ChainsawSpawner.DespawnAll()
-                );
+                page.CreateBool("Enabled", Color.green, Config.Enabled, value =>
+                {
+                    Config.Enabled = value;
+                });
 
-                page.CreateBool(
-                    "Motor Sound",
-                    Color.yellow,
-                    Config.MotorSound,
-                    value =>
-                    {
-                        Config.MotorSound = value;
-                    }
-                );
+                page.CreateBool("Motor Sound", Color.yellow, Config.MotorSound, value =>
+                {
+                    Config.MotorSound = value;
+                });
 
-                page.CreateFloat(
-                    "Damage",
-                    Color.red,
-                    Config.Damage,
-                    1f,
-                    50f,
-                    1f,
-                    value =>
-                    {
-                        Config.Damage = value;
-                    }
-                );
+                page.CreateFloat("Damage", Color.red, Config.Damage, 1f, 0f, 50f, value =>
+                {
+                    Config.Damage = value;
+                });
 
-                page.CreateFloat(
-                    "Blade Speed",
-                    Color.cyan,
-                    Config.BladeDegreesPerSecond,
-                    0f,
-                    5000f,
-                    100f,
-                    value =>
-                    {
-                        Config.BladeDegreesPerSecond = value;
-                    }
-                );
+                page.CreateFloat("Blade Speed", Color.cyan, Config.BladeDegreesPerSecond, 100f, 0f, 5000f, value =>
+                {
+                    Config.BladeDegreesPerSecond = value;
+                });
 
-                page.CreateBool(
-                    "Debug Mode",
-                    Color.white,
-                    Config.DebugMode,
-                    value =>
-                    {
-                        Config.DebugMode = value;
-                    }
-                );
+                page.CreateFloat("Damage Interval", Color.magenta, Config.DamageInterval, 0.025f, 0.025f, 0.5f, value =>
+                {
+                    Config.DamageInterval = value;
+                });
 
-                MelonLogger.Msg(
-                    "[Chainsaw] BoneMenu created."
-                );
+                page.CreateBool("Debug Mode", Color.white, Config.DebugMode, value =>
+                {
+                    Config.DebugMode = value;
+                });
+
+                initialized = true;
+                MelonLogger.Msg("[Chainsaw] BoneMenu page created.");
             }
             catch (Exception ex)
             {
-                MelonLogger.Error(
-                    "[Chainsaw] BoneMenu failed: " + ex
-                );
+                MelonLogger.Error("[Chainsaw] BoneMenu setup failed: " + ex);
             }
         }
     }
