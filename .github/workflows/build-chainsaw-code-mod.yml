@@ -41,9 +41,9 @@ jobs:
             -o "$TEMP/bonelib.zip"
           unzip -q "$TEMP/bonelib.zip" -d "$TEMP/bonelib"
 
-          echo 'Downloading LemonLoader/MelonLoader build dependencies...'
+          echo 'Downloading LemonLoader 0.6.5.1 runtime data...'
           curl -L --fail --retry 3 \
-            'https://github.com/LemonLoader/MelonLoader_057/releases/download/0.2.0.1/installer_deps_0.2.0.zip' \
+            'https://github.com/LemonLoader/MelonLoader/releases/download/0.6.5.1/melon_data.zip' \
             -o "$TEMP/lemon.zip"
           unzip -q "$TEMP/lemon.zip" -d "$TEMP/lemon"
 
@@ -53,8 +53,8 @@ jobs:
             source=$(find "$TEMP" -type f -name "$name" -print -quit)
             if [ -z "$source" ]; then
               echo "ERROR: Could not find $name in downloaded reference packages."
-              echo 'Available DLLs:'
-              find "$TEMP" -type f -iname '*.dll' -printf '%f\n' | sort -u | head -250
+              echo 'Available matching DLLs:'
+              find "$TEMP" -type f -iname '*.dll' -printf '%p\n' | sort | head -400
               exit 1
             fi
             echo "Using $source"
@@ -64,6 +64,7 @@ jobs:
           copy_reference 'MelonLoader.dll'
           copy_reference 'BoneLib.dll'
           copy_reference 'Il2CppInterop.Runtime.dll'
+          copy_reference 'Il2CppInterop.Common.dll'
           copy_reference 'Il2CppAssembly-CSharp.dll'
           copy_reference 'UnityEngine.CoreModule.dll'
           copy_reference 'UnityEngine.PhysicsModule.dll'
