@@ -1,17 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AssemblyName>ChainsawBONELABCodeMod</AssemblyName>
     <RootNamespace>ChainsawBONELABCodeMod</RootNamespace>
     <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="MelonLoader" HintPath="References/MelonLoader.dll" Private="false" />
     <Reference Include="BoneLib" HintPath="References/BoneLib.dll" Private="false" />
     <Reference Include="Il2CppInterop.Runtime" HintPath="References/Il2CppInterop.Runtime.dll" Private="false" />
-    <Reference Include="Il2CppAssembly-CSharp" HintPath="References/Il2CppAssembly-CSharp.dll" Private="false" />
+    <Reference Include="Il2CppInterop.Common" HintPath="References/Il2CppInterop.Common.dll" Private="false" />
+    <Reference Include="Assembly-CSharp" HintPath="References/Assembly-CSharp.dll" Private="false" />
+    <Reference Include="Il2CppSLZ.Marrow" HintPath="References/Il2CppSLZ.Marrow.dll" Private="false" />
+    <Reference Include="UnityEngine" HintPath="References/UnityEngine.dll" Private="false" />
     <Reference Include="UnityEngine.CoreModule" HintPath="References/UnityEngine.CoreModule.dll" Private="false" />
     <Reference Include="UnityEngine.PhysicsModule" HintPath="References/UnityEngine.PhysicsModule.dll" Private="false" />
     <Reference Include="UnityEngine.AudioModule" HintPath="References/UnityEngine.AudioModule.dll" Private="false" />
