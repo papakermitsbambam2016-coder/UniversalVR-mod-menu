@@ -6,7 +6,7 @@ using Il2CppSLZ.Marrow.AI;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(ChainsawBONELABCodeMod.Main), "Chainsaw BONELAB Code Mod", "1.3.1", "TankFullOfOofs Port")]
+[assembly: MelonInfo(typeof(ChainsawBONELABCodeMod.Main), "Chainsaw BONELAB Code Mod", "1.3.2", "TankFullOfOofs Port")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace ChainsawBONELABCodeMod
@@ -18,7 +18,7 @@ namespace ChainsawBONELABCodeMod
 
         public override void OnInitializeMelon()
         {
-            MelonLogger.Msg("[Chainsaw] v1.3.1 SPAWN TEST BUILD LOADED");
+            MelonLogger.Msg("[Chainsaw] v1.3.2 DIRECT QUEST BUNDLE BUILD LOADED");
 
             Hooking.OnGrabObject += OnGrab;
             Hooking.OnReleaseObject += OnRelease;
@@ -26,7 +26,7 @@ namespace ChainsawBONELABCodeMod
             ChainsawSpawner.Initialize();
             ChainsawMenu.Setup();
 
-            MelonLogger.Msg("Chainsaw BONELAB Code Mod 1.3.1 initialized. BoneMenu spawning support enabled.");
+            MelonLogger.Msg("Chainsaw BONELAB Code Mod 1.3.2 initialized. Direct legacy Quest bundle loading enabled.");
         }
 
         public override void OnDeinitializeMelon()

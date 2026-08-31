@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Il2CppInterop.Runtime;
 using MelonLoader;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ namespace ChainsawBONELABCodeMod
 {
     internal static class ChainsawSpawner
     {
+        private const string LegacyQuestAssetKey = "ddc0b40df5ea8ad44aaac0d714b4eb8e";
         private static AssetBundle bundle;
         private static GameObject prefab;
         private static readonly List<GameObject> spawnedChainsaws = new List<GameObject>();
@@ -44,7 +46,10 @@ namespace ChainsawBONELABCodeMod
                         MelonLogger.Msg("[Chainsaw] Bundle asset: " + assetName);
                 }
 
-                prefab = TryLoadPrefab("Chainsaw.prefab");
+                MelonLogger.Msg("[Chainsaw] Trying known legacy Quest asset key: " + LegacyQuestAssetKey);
+                prefab = TryLoadPrefab(LegacyQuestAssetKey);
+                if (prefab == null)
+                    prefab = TryLoadPrefab("Chainsaw.prefab");
                 if (prefab == null)
                     prefab = TryLoadPrefab("Chainsaw");
 
@@ -110,10 +115,26 @@ namespace ChainsawBONELABCodeMod
         {
             try
             {
-                return bundle.LoadAsset<GameObject>(assetName);
+                UnityEngine.Object loaded = bundle.LoadAsset(assetName, Il2CppType.Of<GameObject>());
+                if (loaded == null)
+                {
+                    MelonLogger.Warning("[Chainsaw] Asset entry returned null: " + assetName);
+                    return null;
+                }
+
+                GameObject gameObject = loaded.TryCast<GameObject>();
+                if (gameObject == null)
+                {
+                    MelonLogger.Warning("[Chainsaw] Asset was not a GameObject: " + assetName + " (type=" + loaded.GetType().FullName + ")");
+                    return null;
+                }
+
+                MelonLogger.Msg("[Chainsaw] Loaded GameObject entry: " + assetName + " -> " + gameObject.name);
+                return gameObject;
             }
-            catch
+            catch (Exception ex)
             {
+                MelonLogger.Warning("[Chainsaw] Failed loading asset entry " + assetName + ": " + ex.GetType().Name + ": " + ex.Message);
                 return null;
             }
         }
