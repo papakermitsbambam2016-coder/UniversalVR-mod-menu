@@ -11,6 +11,7 @@ namespace ChainsawPort.Editor
         private const string PrefabPath = "Assets/ChainsawPort/Prefabs/Chainsaw.prefab";
         private const string ModelFolder = "Assets/ChainsawPort/Source/Models";
         private const string MaterialFolder = "Assets/ChainsawPort/Source/Materials";
+        private const string TextureFolder = "Assets/ChainsawPort/Source/Textures";
         private const string AudioFolder = "Assets/ChainsawPort/Source/Audio";
 
         [MenuItem("Chainsaw Port/3 - Bind Recovered Model Materials Audio")]
@@ -76,21 +77,26 @@ namespace ChainsawPort.Editor
             foreach (Transform child in visuals.Cast<Transform>().ToArray())
                 UnityEngine.Object.DestroyImmediate(child.gameObject);
 
-            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            GameObject source = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (source == null)
-                return 0;
+            int count = 0;
+            foreach (string guid in guids.OrderBy(g => AssetDatabase.GUIDToAssetPath(g)))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                GameObject source = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (source == null)
+                    continue;
 
-            GameObject instance = PrefabUtility.InstantiatePrefab(source) as GameObject;
-            if (instance == null)
-                instance = UnityEngine.Object.Instantiate(source);
+                GameObject instance = PrefabUtility.InstantiatePrefab(source) as GameObject;
+                if (instance == null)
+                    instance = UnityEngine.Object.Instantiate(source);
 
-            instance.name = "RecoveredChainsawVisuals";
-            instance.transform.SetParent(visuals, false);
-            instance.transform.localPosition = Vector3.zero;
-            instance.transform.localRotation = Quaternion.identity;
-            instance.transform.localScale = Vector3.one;
-            return 1;
+                instance.name = "Recovered_" + source.name;
+                instance.transform.SetParent(visuals, false);
+                instance.transform.localPosition = Vector3.zero;
+                instance.transform.localRotation = Quaternion.identity;
+                instance.transform.localScale = Vector3.one;
+                count++;
+            }
+            return count;
         }
 
         private static int BindMaterials(Transform visuals)
@@ -103,6 +109,13 @@ namespace ChainsawPort.Editor
                 .Select(g => AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(g)))
                 .Where(m => m != null)
                 .ToArray();
+
+            if (materials.Length == 0)
+            {
+                Material recovered = CreateRecoveredMaterial();
+                if (recovered != null)
+                    materials = new[] { recovered };
+            }
 
             if (materials.Length == 0)
                 return 0;
@@ -126,6 +139,39 @@ namespace ChainsawPort.Editor
                 renderer.sharedMaterials = slots;
             }
             return assignments;
+        }
+
+        private static Material CreateRecoveredMaterial()
+        {
+            string[] textureGuids = AssetDatabase.FindAssets("t:Texture2D", new[] { TextureFolder });
+            if (textureGuids.Length == 0)
+                return null;
+
+            if (!AssetDatabase.IsValidFolder(MaterialFolder))
+                AssetDatabase.CreateFolder("Assets/ChainsawPort/Source", "Materials");
+
+            const string materialPath = MaterialFolder + "/chainsaw_recovered.mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (material == null)
+            {
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                if (shader == null)
+                {
+                    Debug.LogError("[ChainsawPort] No compatible lit shader was found for the recovered material.");
+                    return null;
+                }
+                material = new Material(shader) { name = "chainsaw_recovered" };
+                AssetDatabase.CreateAsset(material, materialPath);
+            }
+
+            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(textureGuids[0]));
+            if (material.HasProperty("_BaseMap"))
+                material.SetTexture("_BaseMap", texture);
+            if (material.HasProperty("_MainTex"))
+                material.SetTexture("_MainTex", texture);
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssets();
+            return material;
         }
 
         private static int BindAudio(Transform idleTransform, Transform bladeTransform)

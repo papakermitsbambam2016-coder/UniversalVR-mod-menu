@@ -1,0 +1,13 @@
+Legacy Chainsaw AssetBundle extraction
+Source=chainsaw.bundle
+SourceUnity=2021.3.5f1
+SourcePlatform=Android
+Purpose=Editable inputs for Patch 6 / Unity 2021.3.16f1 rebuild
+
+Assets/ChainsawPort/Source/Models/Cube.002.obj
+Assets/ChainsawPort/Source/Models/chainsaw.obj
+Assets/ChainsawPort/Source/Audio/IdleSound.wav
+Assets/ChainsawPort/Source/Audio/Start.wav
+Assets/ChainsawPort/Source/Audio/Off.wav
+Assets/ChainsawPort/Source/Audio/HitSoundUN.wav
+Assets/ChainsawPort/Source/Textures/chainsaw_low_Col.png
